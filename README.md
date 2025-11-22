@@ -10,12 +10,12 @@ CartSync enables administrators to monitor multiple carts on a real-time map whi
 
 ### 1. Backend Server (`/backend`)
 
-- **Technology**: Node.js, Express, Socket.IO, MongoDB
+- **Technology**: Node.js, Express, Socket.IO, PostgreSQL
 - **Purpose**: Handle authentication, receive location updates, maintain state, broadcast real-time updates
 - **Features**:
   - JWT authentication for carts and admins
   - Real-time location updates via Socket.IO
-  - Location history with MongoDB persistence
+  - Location history with PostgreSQL persistence
   - Automatic online/offline status detection
   - RESTful API for cart management
 
@@ -47,7 +47,8 @@ CartSync enables administrators to monitor multiple carts on a real-time map whi
 ### Prerequisites
 
 - **Node.js** v18+
-- **MongoDB** (local or cloud)
+- **PostgreSQL** v14+ (via Docker or local installation)
+- **Docker** (recommended for PostgreSQL)
 - **React Native** development environment (for mobile app)
 - **Android Studio** or **Xcode** (for mobile app)
 
@@ -55,13 +56,23 @@ CartSync enables administrators to monitor multiple carts on a real-time map whi
 
 ```bash
 cd backend
+
+# Start PostgreSQL with Docker
+docker-compose up -d
+
+# Install dependencies and setup
 npm install
 cp .env.example .env
-# Edit .env with your MongoDB URI and settings
+# Edit .env with your settings (default values work for Docker setup)
+
+# Run database migrations
+npm run migrate
+
+# Start backend server
 npm run dev
 ```
 
-Backend will run on `http://localhost:5000`
+Backend will run on `http://localhost:5001`
 
 ### 2. Setup Admin Dashboard
 
@@ -77,60 +88,97 @@ Dashboard will open at `http://localhost:3000`
 ### 3. Setup Mobile App
 
 ```bash
-cd mobile/cartsync
+cd cartSync
 npm install
 
 # For Android
-npm run android
+npx react-native run-android
 
 # For iOS
 cd ios && pod install && cd ..
-npm run ios
+npx react-native run-ios
 ```
 
 ## 📖 Detailed Setup
 
 ### Backend Setup
 
-1. **Install MongoDB**:
+1. **Install PostgreSQL with Docker** (Recommended):
+
+   ```bash
+   # Start PostgreSQL container
+   cd backend
+   docker-compose up -d
+   
+   # Verify PostgreSQL is running
+   docker ps
+   ```
+
+   **Or install PostgreSQL locally**:
 
    ```bash
    # macOS
-   brew tap mongodb/brew
-   brew install mongodb-community
-   brew services start mongodb-community
+   brew install postgresql@14
+   brew services start postgresql@14
+   
+   # Ubuntu/Debian
+   sudo apt update
+   sudo apt install postgresql postgresql-contrib
+   sudo systemctl start postgresql
    ```
 
 2. **Configure Environment**:
    Edit `backend/.env`:
 
-   ```
-   MONGODB_URI=mongodb://localhost:27017/cartsync
-   JWT_SECRET=your-secret-key-here
+   ```env
+   # PostgreSQL Configuration
+   DB_HOST=localhost
+   DB_PORT=5433
+   DB_USER=cartsync
+   DB_PASSWORD=cartsync123
+   DB_NAME=cartsync_db
+   
+   # JWT Configuration
+   JWT_SECRET=your-secret-key-here-change-in-production
+   
+   # Admin Credentials
    ADMIN_USERNAME=admin
    ADMIN_PASSWORD=admin123
+   
+   # Server Configuration
+   PORT=5001
+   NODE_ENV=development
    ```
 
-3. **Start Server**:
+3. **Initialize Database**:
 
    ```bash
    cd backend
    npm install
+   
+   # Run migrations to create tables
+   npm run migrate
+   ```
+
+4. **Start Server**:
+
+   ```bash
    npm run dev
    ```
 
-4. **Verify**:
-   - Open `http://localhost:5000`
+5. **Verify**:
+   - Open `http://localhost:5001`
    - You should see the API status message
+   - Check terminal for "✅ Database connected successfully"
 
 ### Dashboard Setup
 
 1. **Configure Backend URL**:
    Edit `dashboard/.env`:
 
-   ```
-   VITE_API_URL=http://localhost:5000
-   VITE_SOCKET_URL=http://localhost:5000
+   ```env
+   VITE_API_URL=http://localhost:5001
+   VITE_SOCKET_URL=http://localhost:5001
    ```
 
 2. **Start Dashboard**:
@@ -148,31 +196,31 @@ npm run ios
 ### Mobile App Setup
 
 1. **Configure Backend URL**:
-   Edit `mobile/cartsync/src/config/constants.js`:
+   Edit `cartSync/src/config/constants.js`:
 
    ```javascript
    // For Android Emulator
-   export const API_URL = "http://10.0.2.2:5000";
+   export const API_URL = "http://10.0.2.2:5001";
 
    // For iOS Simulator
-   // export const API_URL = 'http://localhost:5000';
+   // export const API_URL = 'http://localhost:5001';
 
-   // For Real Device
-   // export const API_URL = 'http://YOUR_COMPUTER_IP:5000';
+   // For Real Device (Change to your computer's local IP)
+   // export const API_URL = 'http://192.168.1.XXX:5001';
    ```
 
 2. **Run App**:
 
    ```bash
-   cd mobile/cartsync
+   cd cartSync
    npm install
 
    # Android
-   npm run android
+   npx react-native run-android
 
    # iOS
    cd ios && pod install && cd ..
-   npm run ios
+   npx react-native run-ios
    ```
 
 ## 🎮 Usage Flow
@@ -250,16 +298,16 @@ npm run ios
 │           └───────────┬─────────────┘                      │
 │                       │                                     │
 │                       ▼                                     │
-│              ┌─────────────────┐                           │
-│              │  Backend Server │                           │
-│              │  (Node.js/Express)│                         │
-│              │  + Socket.IO    │                           │
-│              └────────┬────────┘                           │
-│                       │                                     │
-│                       ▼                                     │
-│              ┌─────────────────┐                           │
-│              │    MongoDB      │                           │
-│              │   (Database)    │                           │
+              ┌─────────────────┐                           │
+              │  Backend Server │                           │
+              │  (Node.js/Express)│                         │
+              │  + Socket.IO    │                           │
+              └────────┬────────┘                           │
+                       │                                     │
+                       ▼                                     │
+              ┌─────────────────┐                           │
+              │   PostgreSQL    │                           │
+              │   (Database)    │                           │
 │              └─────────────────┘                           │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
@@ -411,7 +459,7 @@ curl -X POST http://localhost:5000/api/carts \
 - [ ] Change default admin password
 - [ ] Use strong JWT secret
 - [ ] Enable HTTPS on backend
-- [ ] Use MongoDB Atlas or secure MongoDB
+- [ ] Use managed PostgreSQL (AWS RDS, DigitalOcean, etc.) in production
 - [ ] Configure proper CORS origins
 - [ ] Set up backend monitoring
 - [ ] Test on real devices (Android & iOS)
@@ -422,13 +470,63 @@ curl -X POST http://localhost:5000/api/carts \
 - [ ] Prepare privacy policy
 - [ ] Test with poor network conditions
 
-## 🐛 Troubleshooting
+## � Database Schema (PostgreSQL)
+
+### Carts Table
+
+```sql
+CREATE TABLE carts (
+    id SERIAL PRIMARY KEY,
+    cart_id VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(255),
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    last_seen TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Location History Table
+
+```sql
+CREATE TABLE location_history (
+    id SERIAL PRIMARY KEY,
+    cart_id VARCHAR(255) REFERENCES carts(cart_id) ON DELETE CASCADE,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    accuracy DECIMAL(10, 2),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_cart_timestamp (cart_id, timestamp)
+);
+```
+
+### Features
+
+- ✅ **Carts**: Store cart credentials and metadata
+- ✅ **Location History**: Track all location updates with timestamps
+- ✅ **Indexes**: Optimized for fast queries by cart_id and timestamp
+- ✅ **Foreign Keys**: Maintain referential integrity
+- ✅ **Auto-increment IDs**: Serial primary keys
+- ✅ **Timestamps**: Automatic created_at/updated_at tracking
+
+## �🐛 Troubleshooting
 
 ### Backend Issues
 
-- **MongoDB connection failed**: Check MongoDB is running
+- **PostgreSQL connection failed**: 
+  - Check Docker container is running: `docker ps`
+  - Verify credentials in `.env` match `docker-compose.yml`
+  - Check port 5433 is not in use: `lsof -i :5433`
 - **CORS errors**: Update CORS_ORIGIN in .env
 - **Port already in use**: Change PORT in .env
+- **Database migration errors**: Drop and recreate database:
+  ```bash
+  docker-compose down -v
+  docker-compose up -d
+  npm run migrate
+  ```
 
 ### Dashboard Issues
 
