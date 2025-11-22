@@ -3,8 +3,6 @@ services:
   - type: pserv
     name: cartsync-db
     plan: free
-    databaseName: cartsync_db
-    databaseUser: cartsync
     ipAllowList: []
 
   # Backend Web Service
