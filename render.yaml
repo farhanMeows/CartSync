@@ -7,8 +7,7 @@ services:
   # Backend Web Service
   - type: web
     name: cartsync-backend
-    runtime: node
-    plan: free
+    env: node
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
