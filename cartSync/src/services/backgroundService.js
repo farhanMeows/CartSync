@@ -13,6 +13,8 @@ const sleep = time => new Promise(resolve => setTimeout(() => resolve(), time));
 const backgroundTask = async taskDataArguments => {
   const { delay } = taskDataArguments;
   let updateCount = 0;
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 3;
 
   console.log('🚀 Background task started with delay:', delay, 'ms');
 
@@ -37,12 +39,38 @@ const backgroundTask = async taskDataArguments => {
           accuracy: accuracy ? accuracy.toFixed(2) + 'm' : 'N/A',
         });
 
-        // Send to server
+        // Send to server with timeout and retry
         console.log('📤 Sending to server...');
-        await locationAPI.updateLocation(latitude, longitude, accuracy);
-        console.log('✅ Location sent successfully to server');
+        try {
+          await locationAPI.updateLocation(latitude, longitude, accuracy);
+          console.log('✅ Location sent successfully to server');
+          consecutiveErrors = 0; // Reset error counter on success
+        } catch (apiError) {
+          consecutiveErrors++;
+          console.error('❌ Failed to send location (attempt ' + consecutiveErrors + '):', {
+            message: apiError.message,
+            code: apiError.code,
+            status: apiError.response?.status,
+          });
 
-        // Update last update time
+          // If it's a network error and we haven't exceeded max retries
+          if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS && 
+              (apiError.code === 'ERR_NETWORK' || apiError.code === 'ECONNABORTED')) {
+            console.log('🔄 Will retry on next interval...');
+          } else if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            console.error('❌ Max consecutive errors reached. Check your internet connection.');
+            notificationService.showErrorNotification(
+              'Unable to send location updates. Please check your internet connection.',
+            );
+          }
+
+          // Re-throw 401 errors (authentication issues)
+          if (apiError.response?.status === 401) {
+            throw apiError;
+          }
+        }
+
+        // Update last update time (even if send failed, we tried)
         await AsyncStorage.setItem('lastLocationUpdate', Date.now().toString());
 
         // Update notification with current status
@@ -59,11 +87,14 @@ const backgroundTask = async taskDataArguments => {
           status: error.response?.status,
         });
 
-        // If app is killed or unable to send, notify user
-        if (error.response?.status === 401 || error.code === 'ECONNABORTED') {
+        // If authentication error, stop the service
+        if (error.response?.status === 401) {
+          console.error('❌ Authentication error - stopping background service');
           notificationService.showErrorNotification(
-            'Unable to send location update. Please open the app.',
+            'Session expired. Please login again.',
           );
+          await BackgroundService.stop();
+          break;
         }
       }
 
