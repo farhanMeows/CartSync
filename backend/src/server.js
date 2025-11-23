@@ -28,16 +28,6 @@ const io = new Server(server, {
 // Make io accessible to routes
 app.set("io", io);
 
-// Connect to database
-connectDB();
-
-// Setup Socket.IO
-setupSocketIO(io);
-
-// Start cart status monitoring service
-const cartStatusService = new CartStatusService(io);
-cartStatusService.start();
-
 // Middleware
 app.use(
   cors({
@@ -47,6 +37,23 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+
+// Connect to database and initialize services
+const initializeServer = async () => {
+  await connectDB();
+
+  // Setup Socket.IO
+  setupSocketIO(io);
+
+  // Start cart status monitoring service (after DB is ready)
+  const cartStatusService = new CartStatusService(io);
+  cartStatusService.start();
+};
+
+initializeServer().catch((error) => {
+  console.error("Failed to initialize server:", error);
+  process.exit(1);
+});
 
 // Health check
 app.get("/", (req, res) => {
