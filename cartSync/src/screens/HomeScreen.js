@@ -24,7 +24,6 @@ const HomeScreen = ({ navigation }) => {
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Custom alert state
@@ -97,11 +96,9 @@ const HomeScreen = ({ navigation }) => {
           .connect(parsedCart.cartId)
           .then(() => {
             console.log('Socket connection established');
-            setIsConnected(socketService.isConnected());
           })
           .catch(error => {
             console.error('Socket connection failed:', error);
-            setIsConnected(false);
           });
       }
 
@@ -305,11 +302,11 @@ const HomeScreen = ({ navigation }) => {
           <View
             style={[
               styles.statusDot,
-              isConnected ? styles.statusOnline : styles.statusOffline,
+              isTracking ? styles.statusOnline : styles.statusOffline,
             ]}
           />
           <Text style={styles.statusText}>
-            {isConnected ? 'Connected' : 'Disconnected'}
+            {isTracking ? 'Sharing Location' : 'Not Sharing'}
           </Text>
         </View>
       </View>
@@ -420,7 +417,8 @@ const HomeScreen = ({ navigation }) => {
           • Keep the app running in the background for continuous tracking
         </Text>
         <Text style={styles.infoText}>
-          • You'll receive reminder notifications every 40 minutes during work hours (7 AM - 5 PM)
+          • You'll receive reminder notifications every 40 minutes during work
+          hours (7 AM - 5 PM)
         </Text>
         <Text style={styles.infoText}>
           • Location updates are sent automatically every 30 seconds

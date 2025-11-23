@@ -55,8 +55,10 @@ class ReminderService {
     const now = new Date();
     const hours = now.getHours();
     const isWorkingHours = hours >= 7 && hours < 17; // 7 AM to 5 PM (17:00)
-    
-    console.log(`⏰ Current time: ${now.toLocaleTimeString()}, Working hours: ${isWorkingHours}`);
+
+    console.log(
+      `⏰ Current time: ${now.toLocaleTimeString()}, Working hours: ${isWorkingHours}`,
+    );
     return isWorkingHours;
   }
 
@@ -69,7 +71,9 @@ class ReminderService {
 
       // First check if we're in working hours
       if (!this.isWorkingHours()) {
-        console.log('🌙 Outside working hours (7 AM - 5 PM), skipping notification');
+        console.log(
+          '🌙 Outside working hours (7 AM - 5 PM), skipping notification',
+        );
         return;
       }
 
@@ -79,19 +83,27 @@ class ReminderService {
 
       if (!isTrackingActive) {
         // Check last notification time to enforce 40-minute interval
-        const lastNotificationStr = await AsyncStorage.getItem('lastReminderNotification');
+        const lastNotificationStr = await AsyncStorage.getItem(
+          'lastReminderNotification',
+        );
         const now = Date.now();
 
         if (lastNotificationStr) {
           const lastNotification = parseInt(lastNotificationStr);
           const timeSinceLastNotification = now - lastNotification;
-          const minutesSinceNotification = Math.floor(timeSinceLastNotification / 1000 / 60);
+          const minutesSinceNotification = Math.floor(
+            timeSinceLastNotification / 1000 / 60,
+          );
 
-          console.log(`📱 Last notification was ${minutesSinceNotification} minutes ago`);
+          console.log(
+            `📱 Last notification was ${minutesSinceNotification} minutes ago`,
+          );
 
           // Only send reminder if it's been more than 40 minutes since last notification
           if (timeSinceLastNotification < 40 * 60 * 1000) {
-            console.log('⏳ Less than 40 minutes since last notification, skipping');
+            console.log(
+              '⏳ Less than 40 minutes since last notification, skipping',
+            );
             return;
           }
         }
@@ -102,16 +114,25 @@ class ReminderService {
         if (lastUpdateStr) {
           const lastUpdate = parseInt(lastUpdateStr);
           const timeSinceLastUpdate = now - lastUpdate;
-          const minutesSinceUpdate = Math.floor(timeSinceLastUpdate / 1000 / 60);
+          const minutesSinceUpdate = Math.floor(
+            timeSinceLastUpdate / 1000 / 60,
+          );
 
-          console.log(`⏰ Last location update was ${minutesSinceUpdate} minutes ago`);
+          console.log(
+            `⏰ Last location update was ${minutesSinceUpdate} minutes ago`,
+          );
 
           // Only send reminder if it's been more than 5 minutes since last update
           if (timeSinceLastUpdate > 5 * 60 * 1000) {
-            console.log('⚠️ Tracking is inactive - sending reminder notification');
+            console.log(
+              '⚠️ Tracking is inactive - sending reminder notification',
+            );
             await notificationService.showReminderNotification();
             // Save notification time
-            await AsyncStorage.setItem('lastReminderNotification', now.toString());
+            await AsyncStorage.setItem(
+              'lastReminderNotification',
+              now.toString(),
+            );
           } else {
             console.log('✅ Recent update found, no reminder needed yet');
           }
@@ -119,7 +140,10 @@ class ReminderService {
           console.log('⚠️ No tracking history - sending reminder notification');
           await notificationService.showReminderNotification();
           // Save notification time
-          await AsyncStorage.setItem('lastReminderNotification', now.toString());
+          await AsyncStorage.setItem(
+            'lastReminderNotification',
+            now.toString(),
+          );
         }
       } else {
         console.log('✅ Tracking is active, no reminder needed');

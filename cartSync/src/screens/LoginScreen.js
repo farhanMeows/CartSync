@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,10 @@ import {
   Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {authAPI} from '../services/api';
+import { authAPI } from '../services/api';
 import CustomAlert from '../components/CustomAlert';
 
-const LoginScreen = ({navigation}) => {
+const LoginScreen = ({ navigation }) => {
   const [cartId, setCartId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ const LoginScreen = ({navigation}) => {
 
     try {
       const response = await authAPI.login(cartId, password);
-      
+
       await AsyncStorage.setItem('token', response.data.token);
       await AsyncStorage.setItem('cart', JSON.stringify(response.data.cart));
 
@@ -61,8 +61,9 @@ const LoginScreen = ({navigation}) => {
       console.error('Login error:', error);
       showAlert(
         'Login Failed',
-        error.response?.data?.error || 'Unable to login. Please check your credentials.',
-        'error'
+        error.response?.data?.error ||
+          'Unable to login. Please check your credentials.',
+        'error',
       );
     } finally {
       setLoading(false);
@@ -72,7 +73,8 @@ const LoginScreen = ({navigation}) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}>
+      style={styles.container}
+    >
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>CartSync</Text>
@@ -110,7 +112,8 @@ const LoginScreen = ({navigation}) => {
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={loading}>
+            disabled={loading}
+          >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
