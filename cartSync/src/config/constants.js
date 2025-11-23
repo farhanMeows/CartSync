@@ -1,6 +1,9 @@
 // API Configuration
-// Use your computer's local IP for real device testing
-export const API_URL = 'http://localhost:5001'; // Using adb reverse for development
+// Production backend on Render
+export const API_URL = 'https://khatakhat-cart-app-deployed.onrender.com';
+
+// For local development, uncomment one of these:
+// export const API_URL = 'http://localhost:5001'; // Using adb reverse
 // export const API_URL = 'http://10.62.167.162:5001'; // Real device (UPDATE if IP changes)
 // export const API_URL = 'http://10.0.2.2:5001'; // Android emulator
 // export const API_URL = 'http://localhost:5001'; // iOS simulator
