@@ -59,8 +59,8 @@ const HomeScreen = ({ navigation }) => {
     reminderService.start();
 
     // Schedule native reminder (works even when app is killed)
-    // Checks every 15 minutes (Android WorkManager minimum)
-    nativeReminderService.scheduleReminder(15);
+    // Checks every 40 minutes during working hours (7 AM - 5 PM)
+    nativeReminderService.scheduleReminder(40);
 
     return () => {
       // Cleanup on unmount

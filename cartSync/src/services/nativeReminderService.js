@@ -6,9 +6,10 @@ class NativeReminderService {
   /**
    * Schedule periodic reminders using Android WorkManager
    * This will work even if the app is killed
+   * Checks every 40 minutes during working hours (7 AM - 5 PM)
    * @param {number} intervalMinutes - How often to check (minimum 15 minutes for Android)
    */
-  async scheduleReminder(intervalMinutes = 15) {
+  async scheduleReminder(intervalMinutes = 40) {
     try {
       // Android WorkManager requires minimum 15 minutes
       const safeInterval = Math.max(15, intervalMinutes);

@@ -11,14 +11,21 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
+import java.util.Calendar;
 
 public class ReminderWorker extends Worker {
     
     private static final String PREFS_NAME = "RNAsyncStorageLocalStorage";
     private static final String LAST_UPDATE_KEY = "lastLocationUpdate";
+    private static final String LAST_NOTIFICATION_KEY = "lastReminderNotification";
     private static final long FIVE_MINUTES = 5 * 60 * 1000;
+    private static final long FORTY_MINUTES = 40 * 60 * 1000;
     private static final String CHANNEL_ID = "cartsync-reminders";
     private static final int NOTIFICATION_ID = 1001;
+    
+    // Working hours: 7 AM to 5 PM
+    private static final int WORK_START_HOUR = 7;
+    private static final int WORK_END_HOUR = 17;
     
     public ReminderWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -30,11 +37,33 @@ public class ReminderWorker extends Worker {
         Context context = getApplicationContext();
         
         try {
+            // Check if we're in working hours (7 AM - 5 PM)
+            if (!isWorkingHours()) {
+                return Result.success(); // Skip notification outside working hours
+            }
+            
             // Check if tracking is active by checking last update time
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String lastUpdateStr = prefs.getString(LAST_UPDATE_KEY, null);
+            String lastNotificationStr = prefs.getString(LAST_NOTIFICATION_KEY, null);
             
+            long now = System.currentTimeMillis();
             boolean shouldNotify = false;
+            
+            // Check if we've sent a notification in the last 40 minutes
+            if (lastNotificationStr != null) {
+                try {
+                    long lastNotification = Long.parseLong(lastNotificationStr);
+                    long timeSinceNotification = now - lastNotification;
+                    
+                    if (timeSinceNotification < FORTY_MINUTES) {
+                        // Don't spam - wait at least 40 minutes between notifications
+                        return Result.success();
+                    }
+                } catch (NumberFormatException e) {
+                    // Continue if parsing fails
+                }
+            }
             
             if (lastUpdateStr == null) {
                 // No tracking history
@@ -42,7 +71,6 @@ public class ReminderWorker extends Worker {
             } else {
                 try {
                     long lastUpdate = Long.parseLong(lastUpdateStr);
-                    long now = System.currentTimeMillis();
                     long timeSinceUpdate = now - lastUpdate;
                     
                     // If more than 5 minutes since last update, send reminder
@@ -56,6 +84,10 @@ public class ReminderWorker extends Worker {
             
             if (shouldNotify) {
                 showNotification(context);
+                // Save notification time
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(LAST_NOTIFICATION_KEY, String.valueOf(now));
+                editor.apply();
             }
             
             return Result.success();
@@ -63,6 +95,15 @@ public class ReminderWorker extends Worker {
             e.printStackTrace();
             return Result.failure();
         }
+    }
+    
+    /**
+     * Check if current time is within working hours (7 AM - 5 PM)
+     */
+    private boolean isWorkingHours() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        return hour >= WORK_START_HOUR && hour < WORK_END_HOUR;
     }
     
     private void showNotification(Context context) {
