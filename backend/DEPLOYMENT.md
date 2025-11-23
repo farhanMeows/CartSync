@@ -1,9 +1,10 @@
-# 🚀 Deploy CartSync Backend to Render.com (FREE)
+# 🚀 Deploy CartSync Backend to Render.com (FREE) using Docker
 
 ## Prerequisites
 
 - GitHub account
 - Your code pushed to GitHub (already done ✅)
+- Repository: `farhanMeows/khatakhat-cart-app-deployed`
 
 ## Step-by-Step Deployment
 
@@ -13,70 +14,53 @@
 2. Click "Get Started for Free"
 3. Sign up with GitHub
 
-### 2. Deploy from GitHub
+### 2. Create PostgreSQL Database
 
-#### Option A: Using Blueprint (Automatic - Recommended)
-
-1. Click "New +" → "Blueprint"
-2. Connect your GitHub repository: `Khatakhat/khatakhat-cart-app`
-3. Render will detect `backend/render.yaml`
-4. Review and click "Apply"
-5. Set `ADMIN_PASSWORD` environment variable
-6. Wait 5-10 minutes for deployment
-
-#### Option B: Manual Setup
-
-If blueprint doesn't work:
-
-**2.1 Create PostgreSQL Database**
-
-1. Dashboard → "New +" → "PostgreSQL"
+1. Dashboard → Click "New +" → "PostgreSQL"
 2. Settings:
    - Name: `cartsync-db`
-   - Database: `cartsync_db`
+   - Database: `cartsync`
    - User: `cartsync`
-   - Region: Choose closest to you
-   - Plan: **Free**
+   - Region: Choose closest to you (e.g., Oregon, Frankfurt, Singapore)
+   - Plan: **Free** (512 MB RAM, expires after 90 days)
 3. Click "Create Database"
-4. **Copy** the "Internal Database URL" (you'll need this)
+4. Wait 1-2 minutes
+5. **Copy the "Internal Database URL"** - looks like:
+   ```
+   postgresql://cartsync:abc123...@dpg-xxx-a/cartsync
+   ```
+   ⚠️ Save this - you'll need it in the next step!
 
-**2.2 Create Web Service**
+### 3. Deploy Backend Web Service with Docker
 
-1. Dashboard → "New +" → "Web Service"
-2. Connect your repository
-3. Settings:
-   - Name: `cartsync-backend`
-   - Root Directory: `backend`
-   - Environment: `Node`
-   - Branch: `main`
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Plan: **Free**
+1. Dashboard → Click "New +" → "Web Service"
+2. Click "Connect a repository" → Select: `farhanMeows/khatakhat-cart-app-deployed`
+3. Configure Basic Settings:
+   - **Name**: `cartsync-backend`
+   - **Region**: Same as your database
+   - **Branch**: `main`
+   - **Root Directory**: `backend`
+   - **Environment**: **Docker** (IMPORTANT!)
+   - **Plan**: **Free**
 
-**2.3 Add Environment Variables**
-Click "Advanced" → Add these variables:
+4. Click "Advanced" → Add Environment Variables:
+   ```
+   NODE_ENV=production
+   PORT=5001
+   DATABASE_URL=<paste your Internal Database URL from step 2.5>
+   ADMIN_PASSWORD=YourSecurePassword123!
+   CORS_ORIGIN=*
+   ```
+   
+   Example:
+   ```
+   DATABASE_URL=postgresql://cartsync:abc123xyz@dpg-crqj8n8gph6c738u9abc-a/cartsync
+   ```
 
-```
-NODE_ENV=production
-PORT=5001
-JWT_SECRET=<click "Generate" button>
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-secure-password-here
-
-# From PostgreSQL database (copy from database page)
-DB_HOST=<from database internal URL>
-DB_PORT=5432
-DB_USER=cartsync
-DB_PASSWORD=<from database>
-DB_NAME=cartsync_db
-
-# Or use single DATABASE_URL
-DATABASE_URL=<internal database URL>
-
-CORS_ORIGIN=*
-```
-
-4. Click "Create Web Service"
+5. Click "Create Web Service"
+6. Wait 10-15 minutes ☕ (Docker build + deployment)
+   - First build takes longer
+   - You'll see build logs in real-time
 
 ### 3. Run Database Migrations
 
@@ -93,12 +77,18 @@ npm run migrate
 Or connect manually:
 
 1. Get database connection string
-2. Use TablePlus/pgAdmin to connect
-3. Run SQL from `backend/src/database/schema.sql`
+### 4. Monitor Deployment
 
-### 4. Get Your Backend URL
+Watch the build logs in Render dashboard:
+1. You'll see Docker building the image
+2. Installing dependencies
+3. Starting the server
+4. "✅ Connected to PostgreSQL successfully"
+5. "🚀 CartSync Backend Server running on port 5001"
 
-Your backend will be available at:
+### 5. Get Your Backend URL
+
+After successful deployment, your backend will be available at:
 
 ```
 https://cartsync-backend.onrender.com
@@ -106,15 +96,28 @@ https://cartsync-backend.onrender.com
 
 **Important:** Note this URL - you'll need it for dashboard and mobile app!
 
-### 5. Test Your Backend
+### 6. Test Your Backend
 
 ```bash
 curl https://cartsync-backend.onrender.com
 ```
 
-You should see the API welcome message.
+You should see:
+```json
+{"message":"CartSync API is running"}
+```
 
-### 6. Update Frontend Apps
+### 7. Update CORS for Dashboard
+
+After you deploy the dashboard (next step), come back and add:
+
+1. Go to Render → cartsync-backend → Environment
+2. Update `CORS_ORIGIN` from `*` to your dashboard URL:
+   ```
+   CORS_ORIGIN=https://cartsync-dashboard.vercel.app
+   ```
+
+### 8. Update Frontend Apps
 
 **Dashboard** (`dashboard/.env`):
 

@@ -6,6 +6,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const { connectDB } = require("./config/database");
 const setupSocketIO = require("./services/socketService");
+const CartStatusService = require("./services/cartStatusService");
 
 // Import routes
 const authRoutes = require("./routes/auth");
@@ -32,6 +33,10 @@ connectDB();
 
 // Setup Socket.IO
 setupSocketIO(io);
+
+// Start cart status monitoring service
+const cartStatusService = new CartStatusService(io);
+cartStatusService.start();
 
 // Middleware
 app.use(

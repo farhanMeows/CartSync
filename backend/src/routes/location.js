@@ -33,6 +33,8 @@ router.post("/update", authMiddleware, async (req, res) => {
 
     // Update cart's last location and last seen (flattened fields for PostgreSQL)
     const timestamp = new Date();
+    const wasOffline = !cart.isOnline;
+    
     cart.lastLocationLatitude = latitude;
     cart.lastLocationLongitude = longitude;
     cart.lastLocationAccuracy = accuracy || null;
@@ -41,6 +43,20 @@ router.post("/update", authMiddleware, async (req, res) => {
     cart.isOnline = true;
 
     await cart.save();
+
+    // If cart just came online, emit status change
+    if (wasOffline) {
+      const io = req.app.get("io");
+      if (io) {
+        io.emit("cart-status-changed", {
+          cartId: cart.cartId,
+          name: cart.name,
+          isOnline: true,
+          lastSeen: cart.lastSeen,
+        });
+        console.log(`✅ ${cart.cartId} (${cart.name}) is now ACTIVE`);
+      }
+    }
 
     // Save to location history
     await LocationHistory.create({

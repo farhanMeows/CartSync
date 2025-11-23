@@ -25,19 +25,40 @@ Deploy your entire CartSync application for **100% FREE** using these services.
 1. Go to https://render.com
 2. Sign up with GitHub
 
-### Deploy Backend
+### Deploy PostgreSQL Database
 
-**Option A: Using Blueprint (Recommended)**
+1. Click **New +** → **PostgreSQL**
+2. Configure:
+   - Name: `cartsync-db`
+   - Database: `cartsync`
+   - User: `cartsync`
+   - Region: Choose closest to you
+   - Plan: **Free**
+3. Click **Create Database**
+4. Wait 2 minutes
+5. **Copy the Internal Database URL** (starts with `postgresql://`)
 
-1. New + → Blueprint
-2. Connect repo: `Khatakhat/khatakhat-cart-app`
-3. Render detects `backend/render.yaml`
-4. Set `ADMIN_PASSWORD` in environment variables
-5. Click "Apply"
-6. Wait 10 minutes ☕
+### Deploy Backend with Docker
 
-**Option B: Manual Setup**
-See detailed guide: [`backend/DEPLOYMENT.md`](backend/DEPLOYMENT.md)
+1. Click **New +** → **Web Service**
+2. Connect your GitHub repository: `farhanMeows/khatakhat-cart-app-deployed`
+3. Configure:
+   - Name: `cartsync-backend`
+   - Region: Same as database
+   - Branch: `main`
+   - Root Directory: `backend`
+   - Environment: **Docker**
+   - Plan: **Free**
+4. **Environment Variables** (click Advanced → Add Environment Variable):
+   ```
+   NODE_ENV=production
+   PORT=5001
+   DATABASE_URL=<paste your Internal Database URL>
+   ADMIN_PASSWORD=your-secure-password-here
+   CORS_ORIGIN=*
+   ```
+5. Click **Create Web Service**
+6. Wait 10-15 minutes ☕ (first Docker build takes time)
 
 ### Get Your Backend URL
 

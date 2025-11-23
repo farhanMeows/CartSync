@@ -1,6 +1,7 @@
 // API Configuration
 // Use your computer's local IP for real device testing
-export const API_URL = 'http://192.168.141.150:5001'; // Real device (UPDATE if IP changes)
+export const API_URL = 'http://localhost:5001'; // Using adb reverse for development
+// export const API_URL = 'http://10.62.167.162:5001'; // Real device (UPDATE if IP changes)
 // export const API_URL = 'http://10.0.2.2:5001'; // Android emulator
 // export const API_URL = 'http://localhost:5001'; // iOS simulator
 

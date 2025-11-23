@@ -47,7 +47,7 @@ const Dashboard = () => {
       updateCartLocation(data);
     });
 
-    socket.on("cart-status-change", (data) => {
+    socket.on("cart-status-changed", (data) => {
       updateCartStatus(data);
     });
 
@@ -56,7 +56,7 @@ const Dashboard = () => {
       socket.off("disconnect");
       socket.off("all-carts");
       socket.off("location-update");
-      socket.off("cart-status-change");
+      socket.off("cart-status-changed");
     };
   }, [navigate]);
 
