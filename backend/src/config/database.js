@@ -25,17 +25,27 @@ const connectDB = async () => {
     await sequelize.sync({ alter: process.env.NODE_ENV === "development" });
     console.log("Database synced");
 
-    // Create default admin if not exists (username is always 'admin')
-    const adminExists = await Admin.findOne({
-      where: { username: "admin" },
-    });
-
-    if (!adminExists) {
-      await Admin.create({
+    // Create default admin if not exists
+    const defaultAdmins = [
+      {
         username: "admin",
         password: process.env.ADMIN_PASSWORD || "admin123",
+      },
+      {
+        username: "kk_admin",
+        password: "khatakhat@123",
+      },
+    ];
+
+    for (const adminData of defaultAdmins) {
+      const adminExists = await Admin.findOne({
+        where: { username: adminData.username },
       });
-      console.log("✅ Default admin user created (username: admin)");
+
+      if (!adminExists) {
+        await Admin.create(adminData);
+        console.log(`✅ Admin user created (username: ${adminData.username})`);
+      }
     }
   } catch (error) {
     console.error("Unable to connect to the database:", error);

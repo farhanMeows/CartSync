@@ -185,13 +185,16 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <button className="mobile-menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+      <button
+        className="mobile-menu-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
         <span></span>
         <span></span>
         <span></span>
       </button>
 
-      <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <div className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
           ×
         </button>
