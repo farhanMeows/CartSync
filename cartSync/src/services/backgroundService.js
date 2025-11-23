@@ -47,18 +47,26 @@ const backgroundTask = async taskDataArguments => {
           consecutiveErrors = 0; // Reset error counter on success
         } catch (apiError) {
           consecutiveErrors++;
-          console.error('❌ Failed to send location (attempt ' + consecutiveErrors + '):', {
-            message: apiError.message,
-            code: apiError.code,
-            status: apiError.response?.status,
-          });
+          console.error(
+            '❌ Failed to send location (attempt ' + consecutiveErrors + '):',
+            {
+              message: apiError.message,
+              code: apiError.code,
+              status: apiError.response?.status,
+            },
+          );
 
           // If it's a network error and we haven't exceeded max retries
-          if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS && 
-              (apiError.code === 'ERR_NETWORK' || apiError.code === 'ECONNABORTED')) {
+          if (
+            consecutiveErrors < MAX_CONSECUTIVE_ERRORS &&
+            (apiError.code === 'ERR_NETWORK' ||
+              apiError.code === 'ECONNABORTED')
+          ) {
             console.log('🔄 Will retry on next interval...');
           } else if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-            console.error('❌ Max consecutive errors reached. Check your internet connection.');
+            console.error(
+              '❌ Max consecutive errors reached. Check your internet connection.',
+            );
             notificationService.showErrorNotification(
               'Unable to send location updates. Please check your internet connection.',
             );
@@ -89,7 +97,9 @@ const backgroundTask = async taskDataArguments => {
 
         // If authentication error, stop the service
         if (error.response?.status === 401) {
-          console.error('❌ Authentication error - stopping background service');
+          console.error(
+            '❌ Authentication error - stopping background service',
+          );
           notificationService.showErrorNotification(
             'Session expired. Please login again.',
           );

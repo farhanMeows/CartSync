@@ -1,13 +1,13 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {API_URL} from '../config/constants';
+import { API_URL } from '../config/constants';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
   timeout: 30000, // 30 second timeout
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 });
 
@@ -65,8 +65,8 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (cartId, password) =>
-    api.post('/auth/cart/login', {cartId, password}),
-  
+    api.post('/auth/cart/login', { cartId, password }),
+
   logout: async () => {
     await AsyncStorage.multiRemove(['token', 'cart']);
   },
