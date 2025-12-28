@@ -7,7 +7,7 @@ const morgan = require("morgan");
 const { connectDB } = require("./config/database");
 const setupSocketIO = require("./services/socketService");
 const CartStatusService = require("./services/cartStatusService");
-const { startSimulation } = require("./services/locationSimulationService");
+const { startSimulation } = require("./locationSimulationService");
 
 // Import routes
 const authRoutes = require("./routes/auth");
