@@ -40,16 +40,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 // Connect to database and initialize services
-const initializeServer = async () => {
-  await connectDB();
+const { sequelize } = require("./config/database");
 
-  // Setup Socket.IO
+const initializeServer = async () => {
+  await sequelize.authenticate();
+  console.log("✅ DB connected");
+
+  // 🔥 CREATE TABLES ONCE
+  await sequelize.sync({ alter: true });
+  console.log("✅ DB tables synced");
+
   setupSocketIO(io);
 
-  // Start cart status monitoring service (after DB is ready)
   const cartStatusService = new CartStatusService(io);
   cartStatusService.start();
-  await startSimulation();
 };
 
 initializeServer().catch((error) => {
