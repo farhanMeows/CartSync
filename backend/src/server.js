@@ -8,7 +8,7 @@ const { connectDB } = require("./config/database");
 const setupSocketIO = require("./services/socketService");
 const CartStatusService = require("./services/cartStatusService");
 const { startSimulation } = require("./locationSimulationService");
-const seedCarts = require("./services/seed-carts");
+const seedCarts = require("../scripts/seed-carts");
 // Import routes
 const authRoutes = require("./routes/auth");
 const cartRoutes = require("./routes/carts");
@@ -40,20 +40,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 // Connect to database and initialize services
-const { sequelize } = require("./config/database");
-
 const initializeServer = async () => {
-  await sequelize.authenticate();
-  console.log("✅ DB connected");
+  await connectDB();
 
-  // 🔥 CREATE TABLES ONCE
-  await sequelize.sync({ alter: true });
-  console.log("✅ DB tables synced");
-
+  // Setup Socket.IO
   setupSocketIO(io);
 
+  // Start cart status monitoring service (after DB is ready)
   const cartStatusService = new CartStatusService(io);
   cartStatusService.start();
+
+  await startSimulation();
 };
 
 initializeServer().catch((error) => {
