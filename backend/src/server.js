@@ -49,9 +49,7 @@ const initializeServer = async () => {
   // Start cart status monitoring service (after DB is ready)
   const cartStatusService = new CartStatusService(io);
   cartStatusService.start();
-  if (process.env.NODE_ENV !== "production") {
-    await startSimulation();
-  }
+  await startSimulation();
 };
 
 initializeServer().catch((error) => {
